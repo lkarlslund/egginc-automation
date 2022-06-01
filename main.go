@@ -37,8 +37,9 @@ func main() {
 
 	//
 	thresholds := map[string]float32{
-		"default":               0.04,
-		"ad_offer_watch_button": 0.05,
+		"default":                   0.04,
+		"ad_offer_watch_button":     0.055,
+		"max_chicken_running_bonus": 0.06,
 	}
 
 	debug := true
@@ -320,9 +321,7 @@ func main() {
 
 								drone_pos_scaled := scale_pos(drone)
 
-								// e.Click(drone_pos_scaled, 1)
 								e.MouseDown(drone_pos_scaled)
-								// time.Sleep(time.Millisecond * 250)
 
 								for i := 0; i <= 5; i++ {
 									time.Sleep(time.Millisecond * 3)
@@ -567,9 +566,13 @@ func main() {
 
 					fmt.Println("Clearning app task list")
 					e.SendKey(win.VK_END, 1)
-					time.Sleep(time.Millisecond * 1000)
-					e.SendKey(win.VK_DELETE, 1)
-					time.Sleep(time.Millisecond * 1000)
+					for i := 0; i < 3; i++ {
+						time.Sleep(time.Millisecond * 300)
+						e.SendKey(win.VK_DELETE, 1)
+						time.Sleep(time.Millisecond * 300)
+						e.SendKey(win.VK_ESCAPE, 1)
+						time.Sleep(time.Millisecond * 300)
+					}
 					e.SendKey(win.VK_HOME, 1)
 
 					lastdronetime = time.Now()
@@ -640,7 +643,7 @@ func main() {
 				} else if !max_chickens && hatchgreen.X > 0 && chickenbutton.X > 0 {
 					fmt.Println("Hatching a lot of chickens")
 					e.Click(scale_pos(chickenbutton), 250)
-				} else if silo.X == 0 {
+				} else if silo.X == 0 && chickenbutton.X > 0 {
 					// Move screen so silo is visible
 					fmt.Println("Moving screen to silo")
 					middle := scale_pos(image.Pt(screen.Cols()/2, screen.Rows()/2))
