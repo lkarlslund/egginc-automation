@@ -393,6 +393,7 @@ func main() {
 				}
 
 				wg.Wait()
+
 				screenmat.Close()
 
 				resultlock.Lock()
@@ -413,14 +414,13 @@ func main() {
 			if !e.IsForeground() && !lastactiontime.Equal(lastresultstime) {
 
 				resultlock.Lock()
+				screen := lastimage.Clone()
 				results := make([]result, len(lastresults))
 				copy(results, lastresults)
-				screen := lastimage.Clone()
 				// image_max_y := lastimage.Rows()
 				resultlock.Unlock()
 
 				// Local screen to use
-				defer screen.Close()
 				image_max_x := screen.Cols()
 
 				var silo, hatchgreen,
@@ -523,15 +523,11 @@ func main() {
 				// Blur detection
 				if !watching_ad && time.Duration(boost_button.X) > 0 && time.Since(lastblurtime) > time.Second*15 {
 					greymat := gocv.NewMat()
-					defer greymat.Close()
 					gocv.CvtColor(screen, &greymat, gocv.ColorRGBToGray)
 					lap := gocv.NewMat()
-					defer lap.Close()
 					gocv.Laplacian(greymat, &lap, gocv.MatTypeCV8U, 3, 1, 0, gocv.BorderDefault)
 					dst := gocv.NewMat()
-					defer dst.Close()
 					dstStdDev := gocv.NewMat()
-					defer dstStdDev.Close()
 					gocv.MeanStdDev(lap, &dst, &dstStdDev)
 					deviation := dstStdDev.Mean().Val1 * dstStdDev.Mean().Val1
 					fmt.Printf("Deviation: %v\n", deviation)
@@ -540,6 +536,10 @@ func main() {
 						fmt.Println("Blurry screen detected, fixing")
 						e.Click(scale_pos(boost_button), 1)
 					}
+					greymat.Close()
+					lap.Close()
+					dst.Close()
+					dstStdDev.Close()
 				}
 
 				// take action
@@ -655,6 +655,8 @@ func main() {
 					e.MouseUp(middle.Add(image.Pt(30, 30)))
 				}
 
+				screen.Close()
+
 				resultlock.Lock()
 				lastactiontime = lastresultstime
 				resultlock.Unlock()
@@ -733,8 +735,8 @@ func main() {
 				// signal stop
 				running = false
 			}
-
 			debugmat.Close()
+
 		}
 
 		time.Sleep(time.Millisecond * 25)
