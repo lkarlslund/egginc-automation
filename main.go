@@ -30,9 +30,9 @@ func main() {
 
 	scaley := 960
 
-	dronesizemin := 35
-	dronesizemax := 300
-	dronesizebrownmin := 35
+	dronesizemin := 80
+	dronesizemax := 400
+	dronesizebrownmin := 25
 	dronesizebrownmax := 300
 
 	//
