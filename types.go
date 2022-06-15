@@ -14,11 +14,16 @@ type template struct {
 	keypoints []gocv.KeyPoint
 }
 
+type zap struct {
+	position  image.Point
+	predicted image.Point
+}
+
 type takedowninfo struct {
 	timeout         time.Time
 	initialposition image.Point
 	positions       []image.Point
-	zaps            []image.Point
+	zaps            []zap
 	seencount       int
 }
 

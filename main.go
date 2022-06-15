@@ -279,7 +279,7 @@ func main() {
 								}
 
 								// This is a new drone or it moved too much to be the same drone, add it and wait for it to be seen again to get vectors
-								if closestindex == -1 || closestdist > dronedetectmat.Cols()/10 {
+								if closestindex == -1 || closestdist > dronedetectmat.Cols()/5 {
 									dronetakedowns = append(dronetakedowns, takedowninfo{
 										timeout:         time.Now().Add(time.Second),
 										initialposition: drone,
@@ -304,36 +304,61 @@ func main() {
 								lastdronetakedowns = dronetakedowns
 								resultlock.Unlock()
 
-								if distance(drone, dronetakedowns[closestindex].positions[0]) < dronedetectmat.Cols()/10 {
+								if distance(drone, dronetakedowns[closestindex].positions[0]) < dronedetectmat.Cols()/15 {
 									// Non-moving false positive
 									continue
 								}
 
 								// Should we zap it?
 								if len(dronetakedowns[closestindex].zaps) > 0 &&
-									distance(drone, dronetakedowns[closestindex].zaps[len(dronetakedowns[closestindex].zaps)-1]) < dronedetectmat.Cols()/6 {
+									distance(drone, dronetakedowns[closestindex].zaps[len(dronetakedowns[closestindex].zaps)-1].position) < dronedetectmat.Cols()/6 {
 									// Nope
 									continue
 								}
 
+								// Predict where drone is going to be
+								predicted := drone
+								lastindex := len(dronetakedowns[closestindex].positions) - 1
+								firstindex := 0
+								if len(dronetakedowns[closestindex].positions) > 5 {
+									firstindex = len(dronetakedowns[closestindex].positions) - 5
+								}
+
+								if lastindex-firstindex > 3 {
+									firstdronepos := dronetakedowns[closestindex].positions[firstindex]
+
+									// Predict based on current position and velocity
+									offset := image.Point{
+										X: (drone.X - firstdronepos.X) / ((lastindex - firstindex + 1) / 2),
+										Y: (drone.Y - firstdronepos.Y) / ((lastindex - firstindex + 1) / 2),
+									}
+
+									predicted = drone.Add(offset)
+									fmt.Printf("Drone is at %v, %v predicting it should be at %v, %v\n", drone.X, drone.Y, predicted.X, predicted.Y)
+								}
+
 								// Light it up
-								fmt.Printf("Shooting down drone at %v, %v\n", drone.X, drone.Y)
+								fmt.Printf("Shooting down drone at %v, %v\n", predicted.X, predicted.Y)
 
-								drone_pos_scaled := scale_pos(drone)
+								predicted_pos_scaled := scale_pos(predicted)
 
-								e.MouseDown(drone_pos_scaled)
+								e.MouseDown(predicted_pos_scaled)
 
 								for i := 0; i <= 5; i++ {
 									time.Sleep(time.Millisecond * 3)
-									e.MouseDrag(drone_pos_scaled.Add(image.Pt(0, i*3)))
+									e.MouseDrag(predicted_pos_scaled.Add(image.Pt(0, i*3)))
 								}
 								for i := 5; i >= 0; i-- {
 									time.Sleep(time.Millisecond * 3)
-									e.MouseDrag(drone_pos_scaled.Add(image.Pt(0, i*3)))
+									e.MouseDrag(predicted_pos_scaled.Add(image.Pt(0, i*3)))
 								}
-								e.MouseUp(drone_pos_scaled)
+								e.MouseUp(predicted_pos_scaled)
 
-								dronetakedowns[closestindex].zaps = append(dronetakedowns[closestindex].zaps, drone)
+								dronetakedowns[closestindex].zaps = append(dronetakedowns[closestindex].zaps,
+									zap{
+										position:  drone,
+										predicted: predicted,
+									})
 
 								resultlock.Lock()
 								lastdronetime = time.Now()
@@ -474,7 +499,8 @@ func main() {
 						case "lightblue_ok_button",
 							"blue_ok_button",
 							"pink_ok_button",
-							"purple_ok_button":
+							"purple_ok_button",
+							"grey_ok_button":
 							ok_button = res.location
 							/*					case "green_research_button":
 												fmt.Println("Auto researching 10x")
@@ -722,11 +748,19 @@ func main() {
 			}
 
 			for _, ti := range droneresults {
-				for _, pos := range ti.positions {
-					gocv.Circle(&debugmat, pos, 5, color.RGBA{0, 0, 255, 0}, -1)
+				for i, pos := range ti.positions {
+					if i == 0 {
+						gocv.Circle(&debugmat, pos, 5, color.RGBA{0, 128, 255, 0}, -1)
+					} else {
+						gocv.Circle(&debugmat, pos, 5, color.RGBA{0, 0, 255, 0}, -1)
+					}
+
 				}
-				for _, pos := range ti.zaps {
-					gocv.Circle(&debugmat, pos, 5, color.RGBA{255, 0, 0, 0}, -1)
+				for _, zap := range ti.zaps {
+					gocv.Circle(&debugmat, zap.position, 5, color.RGBA{255, 0, 0, 0}, -1)
+					if zap.position != zap.predicted {
+						gocv.Circle(&debugmat, zap.predicted, 5, color.RGBA{255, 64, 192, 0}, -1)
+					}
 				}
 			}
 
