@@ -5,12 +5,12 @@ I wanted to learn how to use GoCV, and had earlier been playing Egg Inc on my An
 Is it cheating? No, it's optimization of your time.
 
 ## Requirements:
-- BlueStacks 5.5 Android emulator for Windows
-- Egg Inc installed on emulator
+- LD Player 9 Android emulator for Windows (code also supports Bluestacks)
+- Egg Inc installed on emulator (download XAPX and install it from Windows - https://apkcombo.com/egg-inc/com.auxbrain.egginc/download/apk)
 - LOTS of CPU. I use 20 cores on my machine.
 
 ## Settings in BlueStacks:
-- 2560x1440 resolution (important!)
+- 1080x1920 resolution (important!)
 - Hotkeys:
   - Home: HOME
   - Back: PGUP
@@ -18,7 +18,7 @@ Is it cheating? No, it's optimization of your time.
   - Recent Apps: END
 
 ## Features:
-- Rotate screen to portrait mode if needed
+- Rotate screen to portrait mode if needed (Bluestacks)
 - Starts Egg Inc from launcher
 - Watch ad for 2X boost when needed
 - Watches ads for golden eggs, boosts, chicken boxes - but not for money (you can change this in the code)

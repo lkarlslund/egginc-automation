@@ -10,30 +10,63 @@ import (
 	"github.com/lxn/win"
 )
 
-var (
-	emulatorname = "Bluestacks"
-	classname1   = "plrNativeInputWindowClass"
-	classname2   = "BlueStacksApp"
-)
+type EmulatorConfig struct {
+	MainWindowName    string
+	InputWindowClass  string
+	ScreenWindowClass string
+
+	Executable string
+
+	Home, AppSwitcher, Back, Escape uintptr
+}
+
+var Bluestacks = EmulatorConfig{
+	MainWindowName:    "Bluestacks",
+	InputWindowClass:  "plrNativeInputWindowClass",
+	ScreenWindowClass: "BlueStacksApp",
+
+	// Executable: "Bluestacks.exe",
+
+	Home:        win.VK_HOME,
+	AppSwitcher: win.VK_END,
+	Back:        win.VK_PRIOR,
+	Escape:      win.VK_ESCAPE,
+}
+
+var LDPlayer9 = EmulatorConfig{
+	MainWindowName:    "LDPlayer",
+	InputWindowClass:  "RenderWindow",
+	ScreenWindowClass: "subWin",
+	Executable:        "C:\\Program Files\\LDPlayer\\LDPlayer.exe",
+
+	Home:        win.VK_F1,
+	AppSwitcher: win.VK_F2,
+	Back:        win.VK_BACK,
+	Escape:      win.VK_ESCAPE,
+}
 
 type emulator struct {
+	Config EmulatorConfig
+
 	mainwnd, inputwnd, screenwnd win.HWND
 }
 
-func (e *emulator) Open() error {
-	handle, err := findWindow(emulatorname)
+func (e *emulator) Open(ec EmulatorConfig) error {
+	e.Config = ec
+
+	handle, err := findWindow(e.Config.MainWindowName)
 	if err != nil {
 		return fmt.Errorf("Could not find emulator: %v", err)
 	}
 	e.mainwnd = win.HWND(handle)
 
-	handle = findWindowEx(handle, 0, syscall.StringToUTF16Ptr(classname1), nil)
+	handle = findWindowEx(handle, 0, syscall.StringToUTF16Ptr(e.Config.InputWindowClass), nil)
 	if handle == 0 {
 		return errors.New("First child window not found")
 	}
 	e.inputwnd = win.HWND(handle)
 
-	handle = findWindowEx(handle, 0, syscall.StringToUTF16Ptr(classname2), nil)
+	handle = findWindowEx(handle, 0, syscall.StringToUTF16Ptr(e.Config.ScreenWindowClass), nil)
 	if handle == 0 {
 		return errors.New("Second child window not found")
 	}

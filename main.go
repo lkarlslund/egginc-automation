@@ -47,7 +47,7 @@ func main() {
 
 	templates := make(map[string]*template)
 
-	err := e.Open()
+	err := e.Open(LDPlayer9)
 	if err != nil {
 		panic(err)
 	}
@@ -373,6 +373,9 @@ func main() {
 				}
 
 				dronedetectmat.Close()
+			} else {
+				// So it doesnt time out when we get back
+				lastoktime = time.Now()
 			}
 			time.Sleep(time.Millisecond * 5)
 		}
@@ -483,7 +486,7 @@ func main() {
 							watch_ad_boosts_button = res.location
 						case "watch_ad":
 							watch_ad_round_offer_round_icon_button = res.location
-						case "ad_offer_boost", "ad_offer_eggs", "ad_offer_box_of_eggs", "ad_offer_crate_of_eggs", "ad_offer_chicken_box", "ad_offer_large_chicken_box":
+						case "ad_offer_boost", "ad_offer_eggs", "ad_offer_box_of_eggs", "ad_offer_crate_of_eggs", "ad_offer_chicken_box", "ad_offer_large_chicken_box", "ad_offer_tickets":
 							ad_offer_accept = true
 						case "ad_offer_money", "ad_offer_a_ton_of_cash":
 							ad_offer_reject = true
@@ -508,7 +511,7 @@ func main() {
 						case "drone_1", "drone_2":
 							// fmt.Println("Drone detected")
 							// e.Click(middle.X, middle.Y, 1)
-						case "launchicon":
+						case "launchicon", "launchicon_hat", "launchicon_hat_2":
 							fmt.Println("Launching app")
 							e.Click(scale_pos(res.location), 1)
 							time.Sleep(time.Millisecond * 4000)
@@ -558,7 +561,7 @@ func main() {
 					deviation := dstStdDev.Mean().Val1 * dstStdDev.Mean().Val1
 					fmt.Printf("Deviation: %v\n", deviation)
 					lastblurtime = time.Now()
-					if deviation < 1000 {
+					if deviation < 1200 {
 						fmt.Println("Blurry screen detected, fixing")
 						e.Click(scale_pos(boost_button), 1)
 					}
@@ -579,7 +582,7 @@ func main() {
 						shoot_drones = true
 					} else if time.Since(ad_started) > time.Second*45 {
 						fmt.Println("Ad timed out/finished")
-						e.SendKey(win.VK_HOME, 1)
+						e.SendKey(uintptr(e.Config.Home), 1)
 
 						watching_ad = false
 						shoot_drones = true
@@ -591,15 +594,15 @@ func main() {
 					fmt.Println("Crash detected, restarting app")
 
 					fmt.Println("Clearning app task list")
-					e.SendKey(win.VK_END, 1)
 					for i := 0; i < 3; i++ {
-						time.Sleep(time.Millisecond * 300)
+						e.SendKey(e.Config.AppSwitcher, 1)
+						time.Sleep(time.Millisecond * 500)
 						e.SendKey(win.VK_DELETE, 1)
-						time.Sleep(time.Millisecond * 300)
-						e.SendKey(win.VK_ESCAPE, 1)
-						time.Sleep(time.Millisecond * 300)
+						time.Sleep(time.Millisecond * 500)
+						e.SendKey(e.Config.Escape, 1)
+						time.Sleep(time.Millisecond * 500)
 					}
-					e.SendKey(win.VK_HOME, 1)
+					e.SendKey(e.Config.Home, 1)
 
 					lastdronetime = time.Now()
 					lastoktime = time.Now()
